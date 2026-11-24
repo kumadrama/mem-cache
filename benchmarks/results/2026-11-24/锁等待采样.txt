@@ -1,0 +1,32 @@
+File: pressure.test
+Type: delay
+Time: 2026-11-24 17:06:26 CST
+Showing nodes accounting for 304.13s, 100% of 304.13s total
+Dropped 21 nodes (cum <= 1.52s)
+Showing top 25 nodes out of 29
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%    236.15s 77.65%  github.com/kumadrama/mem-cache.(*store).Get
+         0     0%     0%    236.15s 77.65%  github.com/kumadrama/mem-cache.(*store).GetContext (inline)
+         0     0%     0%    236.15s 77.65%  github.com/kumadrama/mem-cache.(*store).readOne
+         0     0%     0%    236.15s 77.65%  github.com/kumadrama/mem-cache.measure.func1
+         0     0%     0%    225.32s 74.09%  github.com/kumadrama/mem-cache.(*signals).lookup
+         0     0%     0%    225.32s 74.09%  github.com/kumadrama/mem-cache.(*store).countLookups
+         0     0%     0%    225.32s 74.09%  go.opentelemetry.io/otel/sdk/metric.(*int64Inst).Add
+         0     0%     0%    225.32s 74.09%  go.opentelemetry.io/otel/sdk/metric.(*int64Inst).aggregate (inline)
+         0     0%     0%    225.32s 74.09%  go.opentelemetry.io/otel/sdk/metric/internal/aggregate.(*valueMap[go.shape.int64]).measure
+         0     0%     0%    225.32s 74.09%  go.opentelemetry.io/otel/sdk/metric/internal/aggregate.Builder[go.shape.int64].Sum.Builder[go.shape.int64].filter.func9
+   135.93s 44.69% 44.69%    212.56s 69.89%  sync.(*Mutex).Unlock (partial-inline)
+   168.20s 55.31%   100%    168.20s 55.31%  runtime.unlock (inline)
+         0     0%   100%    135.93s 44.69%  github.com/kumadrama/mem-cache.measure.gowrap1
+         0     0%   100%    128.69s 42.31%  go.opentelemetry.io/otel/sdk/metric/internal/aggregate.Builder[go.shape.int64].Sum.func3
+         0     0%   100%     76.63s 25.19%  internal/sync.(*Mutex).Unlock (inline)
+         0     0%   100%     76.63s 25.19%  internal/sync.(*Mutex).unlockSlow
+         0     0%   100%     76.63s 25.19%  internal/sync.runtime_Semrelease
+         0     0%   100%     76.63s 25.19%  runtime.semrelease1
+         0     0%   100%     67.96s 22.35%  runtime.mcall
+         0     0%   100%     67.96s 22.35%  runtime.park_m
+         0     0%   100%     67.96s 22.34%  runtime.parkunlock_c
+         0     0%   100%     23.59s  7.76%  internal/sync.(*Mutex).Lock (inline)
+         0     0%   100%     23.59s  7.76%  internal/sync.(*Mutex).lockSlow
+         0     0%   100%     23.59s  7.76%  internal/sync.runtime_SemacquireMutex
+         0     0%   100%     23.59s  7.76%  runtime.semacquire1

@@ -1,0 +1,33 @@
+File: pressure.test
+Type: cpu
+Time: 2026-11-24 17:06:23 CST
+Duration: 3.20s, Total samples = 9.84s (307.13%)
+Showing nodes accounting for 9.55s, 97.05% of 9.84s total
+Dropped 63 nodes (cum <= 0.05s)
+Showing top 25 nodes out of 56
+      flat  flat%   sum%        cum   cum%
+     3.95s 40.14% 40.14%      3.95s 40.14%  runtime.pthread_cond_wait
+     3.31s 33.64% 73.78%      3.31s 33.64%  runtime.usleep
+     1.86s 18.90% 92.68%      1.86s 18.90%  runtime.pthread_cond_signal
+     0.11s  1.12% 93.80%      0.11s  1.12%  runtime.nanotime1
+     0.09s  0.91% 94.72%      0.09s  0.91%  runtime.walltime
+     0.05s  0.51% 95.22%      0.08s  0.81%  runtime.typehash
+     0.04s  0.41% 95.63%      7.09s 72.05%  runtime.lock2
+     0.03s   0.3% 95.93%      2.49s 25.30%  internal/sync.(*Mutex).lockSlow
+     0.02s   0.2% 96.14%      2.51s 25.51%  internal/sync.(*Mutex).Lock (inline)
+     0.02s   0.2% 96.34%      0.14s  1.42%  time.runtimeNow
+     0.01s   0.1% 96.44%      7.33s 74.49%  go.opentelemetry.io/otel/sdk/metric/internal/aggregate.(*valueMap[go.shape.int64]).measure
+     0.01s   0.1% 96.54%      6.22s 63.21%  internal/sync.(*Mutex).Unlock (inline)
+     0.01s   0.1% 96.65%      6.21s 63.11%  internal/sync.(*Mutex).unlockSlow
+     0.01s   0.1% 96.75%      2.43s 24.70%  runtime.semacquire1
+     0.01s   0.1% 96.85%      6.20s 63.01%  runtime.semrelease1
+     0.01s   0.1% 96.95%      1.88s 19.11%  runtime.unlock2
+     0.01s   0.1% 97.05%      1.30s 13.21%  sync.(*RWMutex).Unlock
+         0     0% 97.05%      7.36s 74.80%  github.com/kumadrama/mem-cache.(*signals).lookup
+         0     0% 97.05%      9.02s 91.67%  github.com/kumadrama/mem-cache.(*store).Get
+         0     0% 97.05%      9.02s 91.67%  github.com/kumadrama/mem-cache.(*store).GetContext (inline)
+         0     0% 97.05%      7.36s 74.80%  github.com/kumadrama/mem-cache.(*store).countLookups
+         0     0% 97.05%      1.65s 16.77%  github.com/kumadrama/mem-cache.(*store).lookup
+         0     0% 97.05%      0.07s  0.71%  github.com/kumadrama/mem-cache.(*store).lookupLocked
+         0     0% 97.05%      9.02s 91.67%  github.com/kumadrama/mem-cache.(*store).readOne
+         0     0% 97.05%      0.06s  0.61%  github.com/kumadrama/mem-cache.RealClock.Now
