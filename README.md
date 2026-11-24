@@ -166,3 +166,7 @@ hits=4 misses=3 rate=57.1%
 ```
 
 **排查回源失败**，查询 Doku Warn 日志事件 `mem_cache.load_failed`，按 `cache` 和 `operation` 筛选。日志包含 `policy`、`key_count`、`duration_ms` 和 `error`，传入带 Doku trace 的请求上下文后还可关联 `trace_id` 和 `span_id`。单键并发已合并时，一次实际回源失败产生一条该事件；排查下游压力时同时看 `mem_cache_loads` 和 `mem_cache_load_keys`。
+
+## 性能与压测
+
+[完整压测报告](benchmarks/results/2026-11-24/README.md) 包含四种淘汰策略的吞吐与 P99、Doku 指标开销、并发回源次数、内存占用和逐轮原始数据。报告记录了测试机器、Go 版本及被测提交。在仓库根目录执行 `./benchmarks/run.sh` 可复跑当前提交，终端会打印结果目录。

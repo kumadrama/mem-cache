@@ -1,0 +1,43 @@
+{"Source": "fanout", "Loads": 32, "Policy": "simple", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lru", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lfu", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "arc", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "LoadedKeys": 2048, "Loads": 64, "Requests": 64, "Test": "overlap", "UniqueKeys": 32}
+{"Source": "fanout", "Followers": 128, "Loads": 1, "Test": "cancel"}
+{"Source": "fanout", "Loads": 32, "Policy": "simple", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lru", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lfu", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "arc", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "LoadedKeys": 2048, "Loads": 64, "Requests": 64, "Test": "overlap", "UniqueKeys": 32}
+{"Source": "fanout", "Followers": 128, "Loads": 1, "Test": "cancel"}
+{"Source": "fanout", "Loads": 32, "Policy": "simple", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lru", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "lfu", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "Loads": 32, "Policy": "arc", "Requests": 8192, "Test": "fanout", "Waves": 32, "Workers": 256}
+{"Source": "fanout", "LoadedKeys": 2048, "Loads": 64, "Requests": 64, "Test": "overlap", "UniqueKeys": 32}
+{"Source": "fanout", "Followers": 128, "Loads": 1, "Test": "cancel"}
+{"Source": "state", "Epochs": 12, "Policy": "simple", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lru", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lfu", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "arc", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "simple", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lru", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lfu", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "arc", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "simple", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lru", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "lfu", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "state", "Epochs": 12, "Policy": "arc", "Steps": 98304, "Test": "state", "Workers": 16}
+{"Source": "heap", "Entries": 100000, "FullBytes": 34796648, "Payload": 256, "Policy": "simple", "PurgedBytes": 8398680, "Round": 1, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 34793744, "Payload": 256, "Policy": "simple", "PurgedBytes": 8395744, "Round": 2, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 34788592, "Payload": 256, "Policy": "simple", "PurgedBytes": 8390576, "Round": 3, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43083728, "Payload": 256, "Policy": "lru", "PurgedBytes": 8390672, "Round": 1, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43083552, "Payload": 256, "Policy": "lru", "PurgedBytes": 8390480, "Round": 2, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43088800, "Payload": 256, "Policy": "lru", "PurgedBytes": 8395744, "Round": 3, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 41778704, "Payload": 256, "Policy": "lfu", "PurgedBytes": 8390592, "Round": 1, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 41778672, "Payload": 256, "Policy": "lfu", "PurgedBytes": 8390576, "Round": 2, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 41778688, "Payload": 256, "Policy": "lfu", "PurgedBytes": 8390576, "Round": 3, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43083536, "Payload": 256, "Policy": "arc", "PurgedBytes": 8390480, "Round": 1, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43083632, "Payload": 256, "Policy": "arc", "PurgedBytes": 8390576, "Round": 2, "Test": "heap"}
+{"Source": "heap", "Entries": 100000, "FullBytes": 43083568, "Payload": 256, "Policy": "arc", "PurgedBytes": 8390480, "Round": 3, "Test": "heap"}
+{"Source": "error-burst", "Loads": 3200, "Requests": 3200, "ReturnedErrors": 3200, "Test": "error-burst", "Logs": 3200, "TraceIDs": 64, "BadFields": 0, "KeyLeaks": 0}
