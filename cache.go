@@ -1,9 +1,9 @@
 package caches
 
 import (
+	"context"
 	"errors"
-	"fmt"
-	"sync"
+	"strings"
 	"time"
 )
 
@@ -29,8 +29,9 @@ type Cache interface {
 	MGet(keys []interface{}) ([]interface{}, []int, error)
 	GetIFPresent(key interface{}) (interface{}, error)
 	GetALL(checkExpired bool) map[interface{}]interface{}
-	get(key interface{}, onLoad bool) (interface{}, error)
-	mget(keys []interface{}, onLoad bool) ([]interface{}, []int, error)
+	GetContext(context.Context, any) (any, error)
+	MGetContext(context.Context, []any) ([]any, []int, error)
+	GetIFPresentContext(context.Context, any) (any, error)
 	Remove(key interface{}) bool
 	Purge()
 	Keys(checkExpired bool) []interface{}
@@ -39,23 +40,6 @@ type Cache interface {
 	HotKeys(limit int) (keys []interface{}, total int)
 
 	statsAccessor
-}
-
-type baseCache struct {
-	clock             Clock
-	size              int
-	loaderExpireFunc  LoaderExpireFunc
-	mLoaderExpireFunc MLoaderExpireFunc
-	evictedFunc       EvictedFunc
-	replacedFunc      ReplacedFunc
-	purgeVisitorFunc  PurgeVisitorFunc
-	addedFunc         AddedFunc
-	deserializeFunc   DeserializeFunc
-	serializeFunc     SerializeFunc
-	expiration        *time.Duration
-	mu                sync.RWMutex
-	loadGroup         Group
-	*stats
 }
 
 type (
@@ -72,24 +56,25 @@ type (
 )
 
 type CacheBuilder struct {
-	clock             Clock
-	tp                string
-	size              int
-	loaderExpireFunc  LoaderExpireFunc
-	mLoaderExpireFunc MLoaderExpireFunc
-	evictedFunc       EvictedFunc
-	replacedFunc      ReplacedFunc
-	purgeVisitorFunc  PurgeVisitorFunc
-	addedFunc         AddedFunc
-	expiration        *time.Duration
-	deserializeFunc   DeserializeFunc
-	serializeFunc     SerializeFunc
+	clock            Clock
+	name, tp         string
+	size             int
+	load             func(context.Context, any) (any, *time.Duration, error)
+	loadBatch        func(context.Context, []any) ([]any, *time.Duration, error)
+	evictedFunc      EvictedFunc
+	replacedFunc     ReplacedFunc
+	purgeVisitorFunc PurgeVisitorFunc
+	addedFunc        AddedFunc
+	expiration       *time.Duration
+	deserializeFunc  DeserializeFunc
+	serializeFunc    SerializeFunc
 }
 
 func New(size int) *CacheBuilder {
 	return &CacheBuilder{
 		clock: NewRealClock(),
 		tp:    TYPE_SIMPLE,
+		name:  "default",
 		size:  size,
 	}
 }
@@ -99,39 +84,46 @@ func (cb *CacheBuilder) Clock(clock Clock) *CacheBuilder {
 	return cb
 }
 
-// Set a loader function.
-// loaderFunc: create a new value with this function if cached value is expired.
-func (cb *CacheBuilder) LoaderFunc(loaderFunc LoaderFunc) *CacheBuilder {
-	cb.loaderExpireFunc = func(k interface{}) (interface{}, *time.Duration, error) {
-		v, err := loaderFunc(k)
-		return v, nil, err
+// Name identifies this cache in Doku metrics and logs. Use a stable business name.
+func (cb *CacheBuilder) Name(name string) *CacheBuilder {
+	if strings.TrimSpace(name) != "" {
+		cb.name = strings.TrimSpace(name)
 	}
 	return cb
 }
 
-// Set a mloader function.
-// mLoaderFunc: create a set of new values with this function if cached value is expired.
-func (cb *CacheBuilder) MLoaderFunc(mLoaderFunc MLoaderFunc) *CacheBuilder {
-	cb.mLoaderExpireFunc = func(k []interface{}) ([]interface{}, *time.Duration, error) {
-		v, err := mLoaderFunc(k)
+func (cb *CacheBuilder) LoaderFunc(fn LoaderFunc) *CacheBuilder {
+	return cb.LoaderExpireFunc(func(k any) (any, *time.Duration, error) {
+		v, err := fn(k)
 		return v, nil, err
-	}
+	})
+}
+
+func (cb *CacheBuilder) MLoaderFunc(fn MLoaderFunc) *CacheBuilder {
+	return cb.MLoaderExpireFunc(func(keys []any) ([]any, *time.Duration, error) {
+		values, err := fn(keys)
+		return values, nil, err
+	})
+}
+
+func (cb *CacheBuilder) LoaderExpireFunc(fn LoaderExpireFunc) *CacheBuilder {
+	cb.load = func(_ context.Context, k any) (any, *time.Duration, error) { return fn(k) }
 	return cb
 }
 
-// Set a loader function with expiration.
-// loaderExpireFunc: create a new value with this function if cached value is expired.
-// If nil returned instead of time.Duration from loaderExpireFunc than value will never expire.
-func (cb *CacheBuilder) LoaderExpireFunc(loaderExpireFunc LoaderExpireFunc) *CacheBuilder {
-	cb.loaderExpireFunc = loaderExpireFunc
+func (cb *CacheBuilder) MLoaderExpireFunc(fn MLoaderExpireFunc) *CacheBuilder {
+	cb.loadBatch = func(_ context.Context, keys []any) ([]any, *time.Duration, error) { return fn(keys) }
 	return cb
 }
 
-// Set a loader function with expiration.
-// mLoaderExpireFunc: create a set of new values with this function if cached value is expired.
-// If nil returned instead of time.Duration from loaderExpireFunc than value will never expire.
-func (cb *CacheBuilder) MLoaderExpireFunc(mLoaderExpireFunc MLoaderExpireFunc) *CacheBuilder {
-	cb.mLoaderExpireFunc = mLoaderExpireFunc
+// LoaderContextFunc receives the caller context and may override the configured TTL.
+func (cb *CacheBuilder) LoaderContextFunc(fn func(context.Context, any) (any, *time.Duration, error)) *CacheBuilder {
+	cb.load = fn
+	return cb
+}
+
+func (cb *CacheBuilder) MLoaderContextFunc(fn func(context.Context, []any) ([]any, *time.Duration, error)) *CacheBuilder {
+	cb.loadBatch = fn
 	return cb
 }
 
@@ -195,52 +187,28 @@ func (cb *CacheBuilder) Build() Cache {
 	if cb.size <= 0 && cb.tp != TYPE_SIMPLE {
 		panic("cache: Cache size <= 0")
 	}
-
-	return cb.build()
-}
-
-func (cb *CacheBuilder) build() (c Cache) {
+	s := &store{cfg: *cb, entries: make(map[any]entry), signals: newSignals(cb.name, cb.tp)}
 	switch cb.tp {
 	case TYPE_SIMPLE:
-		return newSimpleCache(cb)
+		c := &SimpleCache{store: s}
+		s.policy = c
+		return c
 	case TYPE_LRU:
-		return newLRUCache(cb)
+		c := &LRUCache{store: s}
+		c.reset()
+		s.policy = c
+		return c
 	case TYPE_LFU:
-		return newLFUCache(cb)
+		c := &LFUCache{store: s}
+		c.reset()
+		s.policy = c
+		return c
 	case TYPE_ARC:
-		return newARC(cb)
+		c := &ARC{store: s}
+		c.reset()
+		s.policy = c
+		return c
 	default:
 		panic("cache: Unknown type " + cb.tp)
 	}
-}
-
-func buildCache(c *baseCache, cb *CacheBuilder) {
-	c.clock = cb.clock
-	c.size = cb.size
-	c.loaderExpireFunc = cb.loaderExpireFunc
-	c.mLoaderExpireFunc = cb.mLoaderExpireFunc
-	c.expiration = cb.expiration
-	c.addedFunc = cb.addedFunc
-	c.deserializeFunc = cb.deserializeFunc
-	c.serializeFunc = cb.serializeFunc
-	c.evictedFunc = cb.evictedFunc
-	c.replacedFunc = cb.replacedFunc
-	c.purgeVisitorFunc = cb.purgeVisitorFunc
-	c.stats = &stats{}
-}
-
-// load a new value using by specified key.
-func (c *baseCache) load(key interface{}, cb func(interface{}, *time.Duration, error) (interface{}, error), isWait bool) (interface{}, bool, error) {
-	v, called, err := c.loadGroup.Do(key, func() (v interface{}, e error) {
-		defer func() {
-			if r := recover(); r != nil {
-				e = fmt.Errorf("Loader panics: %v", r)
-			}
-		}()
-		return cb(c.loaderExpireFunc(key))
-	}, isWait)
-	if err != nil {
-		return nil, called, err
-	}
-	return v, called, nil
 }

@@ -1,8 +1,6 @@
 package caches
 
-import (
-	"sync/atomic"
-)
+import "sync/atomic"
 
 type statsAccessor interface {
 	HitCount() uint64
@@ -11,43 +9,32 @@ type statsAccessor interface {
 	HitRate() float64
 }
 
-// statistics
-type stats struct {
-	hitCount  uint64
-	missCount uint64
-}
+type stats struct{ hits, misses atomic.Uint64 }
 
-// increment hit count
-func (st *stats) IncrHitCount() uint64 {
-	return atomic.AddUint64(&st.hitCount, 1)
-}
-
-// increment miss count
-func (st *stats) IncrMissCount() uint64 {
-	return atomic.AddUint64(&st.missCount, 1)
-}
-
-// HitCount returns hit count
-func (st *stats) HitCount() uint64 {
-	return atomic.LoadUint64(&st.hitCount)
-}
-
-// MissCount returns miss count
-func (st *stats) MissCount() uint64 {
-	return atomic.LoadUint64(&st.missCount)
-}
-
-// LookupCount returns lookup count
-func (st *stats) LookupCount() uint64 {
-	return st.HitCount() + st.MissCount()
-}
-
-// HitRate returns rate for cache hitting
-func (st *stats) HitRate() float64 {
-	hc, mc := st.HitCount(), st.MissCount()
-	total := hc + mc
-	if total == 0 {
-		return 0.0
+func (s *stats) add(hits, misses int) {
+	if hits > 0 {
+		s.hits.Add(uint64(hits))
 	}
-	return float64(hc) / float64(total)
+	if misses > 0 {
+		s.misses.Add(uint64(misses))
+	}
+}
+
+func (s *stats) IncrHitCount() uint64 { return s.hits.Add(1) }
+
+func (s *stats) IncrMissCount() uint64 { return s.misses.Add(1) }
+
+func (s *stats) HitCount() uint64 { return s.hits.Load() }
+
+func (s *stats) MissCount() uint64 { return s.misses.Load() }
+
+func (s *stats) LookupCount() uint64 { return s.hits.Load() + s.misses.Load() }
+
+func (s *stats) HitRate() float64 {
+	hits := s.hits.Load()
+	total := hits + s.misses.Load()
+	if total == 0 {
+		return 0
+	}
+	return float64(hits) / float64(total)
 }

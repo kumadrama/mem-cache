@@ -1,67 +1,64 @@
 package caches
 
 import (
+	"context"
+	"fmt"
 	"sync"
 )
 
-// call is an in-flight or completed Do call
-type call struct {
-	wg  sync.WaitGroup
-	val interface{}
-	err error
+type flight struct {
+	done  chan struct{}
+	value any
+	err   error
 }
 
-// Group represents a class of work and forms a namespace in which
-// units of work can be executed with duplicate suppression.
+// Group shares one in-flight load of a key among concurrent callers.
 type Group struct {
-	cache Cache
-	mu    sync.Mutex            // protects m
-	m     map[interface{}]*call // lazily initialized
+	mu      sync.Mutex
+	pending map[any]*flight
 }
 
-// Do executes and returns the results of the given function, making
-// sure that only one execution is in-flight for a given key at a
-// time. If a duplicate comes in, the duplicate caller waits for the
-// original to complete and receives the same results.
-func (g *Group) Do(key interface{}, fn func() (interface{}, error), isWait bool) (interface{}, bool, error) {
+func (g *Group) Do(key any, load func() (any, error), wait bool) (any, bool, error) {
+	return g.do(context.Background(), key, load, wait)
+}
+
+func (g *Group) do(ctx context.Context, key any, load func() (any, error), wait bool) (any, bool, error) {
 	g.mu.Lock()
-	v, err := g.cache.get(key, true)
-	if err == nil {
+	if f := g.pending[key]; f != nil {
 		g.mu.Unlock()
-		return v, false, nil
-	}
-	if g.m == nil {
-		g.m = make(map[interface{}]*call)
-	}
-	if c, ok := g.m[key]; ok {
-		g.mu.Unlock()
-		if !isWait {
+		if !wait {
 			return nil, false, KeyNotFoundError
 		}
-		c.wg.Wait()
-		return c.val, false, c.err
+		select {
+		case <-ctx.Done():
+			return nil, false, ctx.Err()
+		case <-f.done:
+			return f.value, false, f.err
+		}
 	}
-	c := new(call)
-	c.wg.Add(1)
-	g.m[key] = c
+	if g.pending == nil {
+		g.pending = make(map[any]*flight)
+	}
+	f := &flight{done: make(chan struct{})}
+	g.pending[key] = f
 	g.mu.Unlock()
-	if !isWait {
-		go func() {
-			_, _ = g.call(c, key, fn)
+
+	run := func() {
+		defer func() {
+			if p := recover(); p != nil {
+				f.err = fmt.Errorf("cache loader panic: %v", p)
+			}
+			g.mu.Lock()
+			delete(g.pending, key)
+			close(f.done)
+			g.mu.Unlock()
 		}()
+		f.value, f.err = load()
+	}
+	if !wait {
+		go run()
 		return nil, false, KeyNotFoundError
 	}
-	v, err = g.call(c, key, fn)
-	return v, true, err
-}
-
-func (g *Group) call(c *call, key interface{}, fn func() (interface{}, error)) (interface{}, error) {
-	c.val, c.err = fn()
-	c.wg.Done()
-
-	g.mu.Lock()
-	delete(g.m, key)
-	g.mu.Unlock()
-
-	return c.val, c.err
+	run()
+	return f.value, true, f.err
 }
